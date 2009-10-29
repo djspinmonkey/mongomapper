@@ -213,6 +213,38 @@ class ValidationsTest < Test::Unit::TestCase
       doc2.should_not have_error_on(:name)
     end
     
+    should "allow entries that differ only in case by default" do
+      document = Class.new do
+        include MongoMapper::Document
+        set_collection_name 'test'
+        
+        key :name
+        validates_uniqueness_of :name
+      end
+      
+      doc = document.new("name" => "BLAMMO")
+      doc.save.should be_true
+
+      doc2 = document.new("name" => "blammo")
+      doc2.should_not have_error_on(:name)
+    end
+
+    should "fail on entries that differ only in case if :case_sensitive => false" do
+      document = Class.new do
+        include MongoMapper::Document
+        set_collection_name 'test'
+        
+        key :name
+        validates_uniqueness_of :name, :case_sensitive => false
+      end
+      
+      doc = document.new("name" => "BLAMMO")
+      doc.save.should be_true
+
+      doc2 = document.new("name" => "blammo")
+      doc2.should have_error_on(:name)
+    end
+
     context "scoped by a single attribute" do
       setup do
         @document = Class.new do
